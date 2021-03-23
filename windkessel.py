@@ -123,7 +123,7 @@ def solve_wk(
     rtol=1e-6,
 ):
 
-    dt = (time_end - time_start) / N
+    dt = (time_end - time_start) / N / 10
 
     return sp.integrate.solve_ivp(
         lambda t, p: wk(t, p, I, R1, R2, C, L, dt),
@@ -150,7 +150,7 @@ def solve_wk4p(
     rtol=1e-6,
 ):
 
-    dt = (time_end - time_start) / N
+    dt = (time_end - time_start) / N / 10
 
     return sp.integrate.solve_ivp(
         lambda t, p: wk4p(t, p, I, R1, R2, C, L, dt),
