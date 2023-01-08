@@ -51,6 +51,7 @@ import numpy as np
 import scipy as sp
 import scipy.integrate
 
+
 def ddt(fun, t, dt):
     # Central differencing method
     return (fun(t + dt) - fun(t - dt)) / (2 * dt)
@@ -60,7 +61,8 @@ def d2dt2(fun, t, dt):
     # Central differencing method
     return (fun(t + dt) - 2 * fun(t) + fun(t - dt)) / (dt ** 2)
 
-def wk_old(t, y, I, Rc, Rp, C, L, dt):
+
+def wk_old(t, y, Q, Rc, Rp, C, L, dt):
     # The 4-Element WK with serial L
     # set L = 0 for 3EWK
     # set L = 0, Rc = 0 for 2EWK
@@ -71,18 +73,19 @@ def wk_old(t, y, I, Rc, Rp, C, L, dt):
     p2 = y[1]
 
     dp1dt = (
-        Rc * ddt(I, t, dt)
-        + (1 + Rc / Rp) * I(t) / C
+        Rc * ddt(Q, t, dt)
+        + (1 + Rc / Rp) * Q(t) / C
         - p1 / (Rp * C)
-        + L / (Rp * C) * ddt(I, t, dt)
-        + L * d2dt2(I, t, dt)
+        + L / (Rp * C) * ddt(Q, t, dt)
+        + L * d2dt2(Q, t, dt)
     )
     # Pressure after proximal resistance:
-    dp2dt = -p1 / (Rp * C) + (1 + Rc / Rp) * I(t) / C + L / (Rp * C) * ddt(I, t, dt)
+    dp2dt = -p1 / (Rp * C) + (1 + Rc / Rp) * Q(t) / C + L / (Rp * C) * ddt(Q, t, dt)
 
     return [dp1dt, dp2dt]
 
-def wk(t, y, I, Rc, Rp, C, L, dt):
+
+def wk(t, y, Q, Rc, Rp, C, L, dt):
     # The 4-Element WK with serial L
     # set L = 0 for 3EWK
     # set L = 0, Rc = 0 for 2EWK
@@ -97,19 +100,22 @@ def wk(t, y, I, Rc, Rp, C, L, dt):
     dp1dt = 0.0
 
     # Pressure after proximal resistance:
-    dp2dt = I(t) / C - p2 / (C * Rp)
+    dp2dt = Q(t) / C - p2 / (C * Rp)
 
     return [dp1dt, dp2dt]
 
-def wk4p(t, y, I, Rc, Rp, C, L, dt):
+
+def wk4p(t, y, Q, Rc, Rp, C, L, dt):
     # The 4-Element WK with parallel L
+
     p1 = y[0]
     p2 = y[1]
+
     dp1dt = y[2]
     d2pdt2 = (
-        Rc * d2dt2(I, t, dt)
-        + (Rc / Rp + 1 / C) * ddt(I, t, dt)
-        + Rc / (C * L) * I(t)
+        Rc * d2dt2(Q, t, dt)
+        + (Rc / Rp + 1 / C) * ddt(Q, t, dt)
+        + Rc / (C * L) * Q(t)
         - Rc / (Rp * C * L) * p1
         - (1 / (Rp * C) + Rc / L) * dp1dt
     )
@@ -118,7 +124,8 @@ def wk4p(t, y, I, Rc, Rp, C, L, dt):
 
     return [dp1dt, dp2dt, d2pdt2]
 
-def wk5(t, y, I, Rc, Rp, C, Lp, Ls, dt):
+
+def wk5(t, y, Q, Rc, Rp, C, Lp, Ls, dt):
     # The 4/5-Element WK with parallel Lp and serial Ls
     # changed from Ian's serial inertance being Lp in the Matlab code!
     # d_WM4E(1)  = -R1/L*WM4E(1) + (R1/L - 1/R2/C )*WM4E(2) + R1*(1+Lp/L)*didt + i/C;
@@ -127,13 +134,14 @@ def wk5(t, y, I, Rc, Rp, C, Lp, Ls, dt):
     dp1dt = (
         -Rc / Lp * y[0]
         + (Rc / Lp - 1 / Rp / C) * y[1]
-        + Rc * (1 + Ls / Lp) * ddt(I, t, dt)
-        + I(t) / C
+        + Rc * (1 + Ls / Lp) * ddt(Q, t, dt)
+        + Q(t) / C
     )
 
-    dp2dt = -1 / Rp / C * y[1] + I(t) / C
+    dp2dt = -1 / Rp / C * y[1] + Q(t) / C
 
     return [dp1dt, dp2dt]
+
 
 def solve_wk(
     fun,
@@ -218,6 +226,7 @@ def solve_wk5(
         vectorized=True,
     )
 
+
 def nearest_time_index(t_array, t):
 
     t = t % np.max(t_array)
@@ -237,6 +246,7 @@ def low_time_index(t_array, t):
         idx = idx - 1
 
     return idx
+
 
 def local_PWBezier(data, t):
     """
@@ -274,6 +284,7 @@ def local_PWBezier(data, t):
         + 3.0 * (1.0 - intime) * pow(intime, 2.0) * b2
         + pow(intime, 3.0) * b3
     )
+
 
 def PWBezier(data, t):
     '''
